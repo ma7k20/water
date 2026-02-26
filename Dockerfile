@@ -31,7 +31,7 @@ COPY . .
 
 RUN chmod +x docker/start.sh \
  && mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
- && chown -R www-data:www-data storage bootstrap/cache
+ && chmod -R 0777 storage bootstrap/cache
 
 EXPOSE 10000
 
