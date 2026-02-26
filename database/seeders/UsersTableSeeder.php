@@ -2,20 +2,21 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
 
 class UsersTableSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        User::create([
-            'name' => 'مFadi',
-            'email' => 'fadi@gmail.com',
-            'password' => Hash::make('12345678'), // كلمة المرور مشفرة
-        ]);
-
-        
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'name' => 'Admin',
+                'password' => Hash::make('12345678'),
+                'is_admin' => true,
+            ]
+        );
     }
 }
