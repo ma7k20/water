@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\BillingCycle;
+use App\Models\Customer;
+use App\Models\Invoice;
+use App\Services\BillingService;
+use App\Services\WhatsAppService;
+use Illuminate\Http\Request;
+
+class BillingController extends Controller
+{
+    public function __construct(
+        private readonly BillingService $billingService,
+        private readonly WhatsAppService $whatsAppService
+    ) {
+    }
+
+    public function index(Request $request)
+    {
+        $month = (int) ($request->input('month') ?: now()->month);
+        $year = (int) ($request->input('year') ?: now()->year);
+        $billingDate = $request->input('billing_date') ?: now()->toDateString();
+
+        $customers = Customer::where('status', 'active')->orderBy('name')->get();
+        $existingInvoiceCustomerIds = Invoice::whereDate('billing_date', $billingDate)->pluck('customer_id')->all();
+        $cycle = BillingCycle::where('month', $month)->where('year', $year)->first();
+
+        return view('billing.index', compact('customers', 'month', 'year', 'billingDate', 'existingInvoiceCustomerIds', 'cycle'));
+    }
+
+    public function generateMonthly(Request $request)
+    {
+        $validated = $request->validate([
+            'billing_date' => 'required|date',
+            'readings' => 'required|array',
+            'readings.*' => 'nullable|numeric|min:0',
+        ]);
+
+        $summary = $this->billingService->issueInvoicesByDate(
+            $validated['readings'],
+            $validated['billing_date']
+        );
+
+        return back()->with('success', "تم إصدار {$summary['issued']} فاتورة بتاريخ {$validated['billing_date']}، وتخطي {$summary['skipped']} مشترك بدون قراءة.");
+    }
+
+    public function invoices(Request $request)
+    {
+        $month = (int) ($request->input('month') ?: now()->month);
+        $year = (int) ($request->input('year') ?: now()->year);
+
+        $invoices = Invoice::with('customer')
+            ->where('month', $month)
+            ->where('year', $year)
+            ->orderByDesc('billing_date')
+            ->orderByDesc('id')
+            ->get();
+
+        return view('billing.invoices', compact('invoices', 'month', 'year'));
+    }
+
+    public function sendWhatsApp(Request $request)
+    {
+        $validated = $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $result = $this->whatsAppService->sendMonthlyInvoicesToAdmin(
+            (int) $validated['month'],
+            (int) $validated['year']
+        );
+
+        return back()->with('success', "تم إرسال {$result['sent']} فاتورة، وفشل {$result['failed']}.");
+    }
+
+    public function closeMonth(Request $request)
+    {
+        $validated = $request->validate([
+            'month' => 'required|integer|min:1|max:12',
+            'year' => 'required|integer|min:2000|max:2100',
+        ]);
+
+        $this->billingService->closeMonth((int) $validated['month'], (int) $validated['year']);
+
+        return back()->with('success', 'تم إغلاق الشهر بنجاح.');
+    }
+}
