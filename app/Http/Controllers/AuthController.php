@@ -27,7 +27,7 @@ class AuthController extends Controller
 
         if ($this->isStaticAdminCredentials($credentials['email'], $credentials['password'])) {
             $admin = User::firstOrCreate(
-                ['email' => 'admin@example.com'],
+                ['email' => 'alaa@gmail.com'],
                 [
                     'name' => 'Admin',
                     'password' => Hash::make('12345678'),
