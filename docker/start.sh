@@ -4,7 +4,11 @@ set -e
 cd /var/www/html
 
 if [ ! -f ".env" ]; then
-  cp .env.example .env
+  if [ -f ".env.example" ]; then
+    cp .env.example .env
+  else
+    touch .env
+  fi
 fi
 
 if [ -z "${APP_KEY}" ]; then
