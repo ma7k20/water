@@ -74,6 +74,6 @@ class AuthController extends Controller
 
     private function isStaticAdminCredentials(string $email, string $password): bool
     {
-        return $email === 'admin@example.com' && $password === '12345678';
+        return $email === 'alaa@gmail.com' && $password === '12345678';
     }
 }
