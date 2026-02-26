@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Carbon;
 
 return new class extends Migration
 {
@@ -15,7 +16,19 @@ return new class extends Migration
             }
         });
 
-        DB::statement("UPDATE invoices SET billing_date = STR_TO_DATE(CONCAT(year, '-', month, '-01'), '%Y-%m-%d') WHERE billing_date IS NULL");
+        DB::table('invoices')
+            ->select(['id', 'year', 'month'])
+            ->whereNull('billing_date')
+            ->orderBy('id')
+            ->chunkById(200, function ($rows) {
+                foreach ($rows as $row) {
+                    DB::table('invoices')
+                        ->where('id', $row->id)
+                        ->update([
+                            'billing_date' => Carbon::createFromDate((int) $row->year, (int) $row->month, 1)->toDateString(),
+                        ]);
+                }
+            });
 
         Schema::table('invoices', function (Blueprint $table) {
             //$table->dropUnique('invoices_customer_month_year_unique');
