@@ -46,7 +46,9 @@ services:
       - key: CACHE_DRIVER
         value: file
       - key: SESSION_DRIVER
-        value: cookie
+        value: file
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
       - key: QUEUE_CONNECTION
         value: sync
       - key: WHATSAPP_PROVIDER
