@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Invoice;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,7 +11,7 @@ class WhatsAppService
 {
     public function sendMonthlyInvoicesToAdmin(int $month, int $year): array
     {
-        $provider = config('services.whatsapp.provider', 'webjs');
+        $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
         $adminPhone = config('services.whatsapp.admin_phone');
 
         if (!$adminPhone) {
@@ -40,9 +41,11 @@ class WhatsAppService
                 ]);
                 $sent++;
             } else {
+                $status = $response->status();
+                $body = $response->body();
                 $invoice->update([
                     'whatsapp_status' => 'failed',
-                    'whatsapp_error' => $response->body(),
+                    'whatsapp_error' => "HTTP {$status}: {$body}",
                 ]);
                 $failed++;
             }
@@ -67,12 +70,21 @@ class WhatsAppService
         if (!$baseUrl || !$apiKey) {
             throw new \RuntimeException('إعدادات whatsapp-web.js غير مكتملة: WHATSAPP_WEBJS_BASE_URL / WHATSAPP_WEBJS_API_KEY');
         }
+        if (app()->environment('production') && preg_match('/localhost|127\.0\.0\.1/i', $baseUrl)) {
+            throw new \RuntimeException('لا يمكن استخدام localhost لخدمة WhatsApp WebJS في بيئة الإنتاج. استخدم رابط خدمة عام أو غيّر المزود إلى cloud.');
+        }
 
-        return Http::withHeaders(['X-Api-Key' => $apiKey])
-            ->post($baseUrl . '/api/send-text', [
-                'to' => $to,
-                'message' => $message,
-            ]);
+        try {
+            return Http::timeout(20)
+                ->acceptJson()
+                ->withHeaders(['X-Api-Key' => $apiKey])
+                ->post($baseUrl . '/api/send-text', [
+                    'to' => $to,
+                    'message' => $message,
+                ]);
+        } catch (ConnectionException $e) {
+            throw new \RuntimeException("تعذر الاتصال بخدمة WhatsApp WebJS على {$baseUrl}: {$e->getMessage()}");
+        }
     }
 
     private function sendViaCloudApi(string $to, string $message)
@@ -87,9 +99,9 @@ class WhatsAppService
 
         $url = "https://graph.facebook.com/{$apiVersion}/{$phoneNumberId}/messages";
 
-        return Http::withToken($token)->post($url, [
+        return Http::timeout(20)->withToken($token)->post($url, [
             'messaging_product' => 'whatsapp',
-            'to' => $to,
+            'to' => preg_replace('/\D+/', '', $to),
             'type' => 'text',
             'text' => ['body' => $message],
         ]);
