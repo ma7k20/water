@@ -9,12 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class CustomerController extends Controller
 {
     public function index(): View
     {
         $customers = Customer::orderByDesc('id')->paginate(20);
+
         return view('customers.index', compact('customers'));
     }
 
@@ -25,10 +27,16 @@ class CustomerController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $data = $this->validatedData($request);
-        Customer::create($data);
+        try {
+            $data = $this->validatedData($request);
+            Customer::create($data);
 
-        return redirect()->route('customers.index')->with('success', 'ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ø´ØªØ±Ùƒ Ø¨Ù†Ø¬Ø§Ø­.');
+            return redirect()->route('customers.index')->with('success', 'ÊãÊ ÅÖÇÝÉ ÇáãÔÊÑß ÈäÌÇÍ.');
+        } catch (Throwable $e) {
+            Log::error('Customer store failed', ['message' => $e->getMessage()]);
+
+            return back()->withErrors(['general' => 'ÍÏË ÎØÃ ÃËäÇÁ ÍÝÙ ÇáãÔÊÑß.'])->withInput();
+        }
     }
 
     public function edit(Customer $customer): View
@@ -38,44 +46,63 @@ class CustomerController extends Controller
 
     public function update(Request $request, Customer $customer): RedirectResponse
     {
-        $data = $this->validatedData($request, $customer->id);
-        $customer->update($data);
+        try {
+            $data = $this->validatedData($request, $customer->id);
+            $customer->update($data);
 
-        return redirect()->route('customers.index')->with('success', 'ØªÙ… ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø´ØªØ±Ùƒ.');
+            return redirect()->route('customers.index')->with('success', 'Êã ÊÚÏíá ÈíÇäÇÊ ÇáãÔÊÑß.');
+        } catch (Throwable $e) {
+            Log::error('Customer update failed', [
+                'customer_id' => $customer->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['general' => 'ÍÏË ÎØÃ ÃËäÇÁ ÊÚÏíá ÈíÇäÇÊ ÇáãÔÊÑß.'])->withInput();
+        }
     }
 
     public function destroy(Customer $customer): RedirectResponse
     {
         $customer->delete();
-        return back()->with('success', 'ØªÙ… Ø­Ø°Ù Ø§Ù„Ù…Ø´ØªØ±Ùƒ.');
+
+        return back()->with('success', 'Êã ÍÐÝ ÇáãÔÊÑß.');
     }
 
     public function topup(Request $request, Customer $customer): RedirectResponse
     {
-        $data = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
-            'note' => 'nullable|string|max:255',
-        ]);
-
-        DB::transaction(function () use ($customer, $data, $request) {
-            $customer->update([
-                'previous_balance' => (float) $customer->previous_balance + (float) $data['amount'],
+        try {
+            $data = $request->validate([
+                'amount' => 'required|numeric|min:0.01',
+                'note' => 'nullable|string|max:255',
             ]);
 
-            BalanceTransaction::create([
+            DB::transaction(function () use ($customer, $data, $request) {
+                $customer->update([
+                    'previous_balance' => (float) $customer->previous_balance + (float) $data['amount'],
+                ]);
+
+                BalanceTransaction::create([
+                    'customer_id' => $customer->id,
+                    'amount' => $data['amount'],
+                    'note' => $data['note'] ?? 'ÔÍä ÑÕíÏ íÏæí',
+                    'created_by' => $request->user()?->id,
+                ]);
+            });
+
+            Log::info('Customer balance topped up', [
                 'customer_id' => $customer->id,
                 'amount' => $data['amount'],
-                'note' => $data['note'] ?? 'Ø´Ø­Ù† Ø±ØµÙŠØ¯ ÙŠØ¯ÙˆÙŠ',
-                'created_by' => $request->user()?->id,
             ]);
-        });
 
-        Log::info('Customer balance topped up', [
-            'customer_id' => $customer->id,
-            'amount' => $data['amount'],
-        ]);
+            return back()->with('success', 'ÊãÊ ÅÖÇÝÉ ÇáÑÕíÏ ÈäÌÇÍ.');
+        } catch (Throwable $e) {
+            Log::error('Customer topup failed', [
+                'customer_id' => $customer->id,
+                'message' => $e->getMessage(),
+            ]);
 
-        return back()->with('success', 'ØªÙ…Øª Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø±ØµÙŠØ¯ Ø¨Ù†Ø¬Ø§Ø­.');
+            return back()->withErrors(['general' => 'ÍÏË ÎØÃ ÃËäÇÁ ÊÚÈÆÉ ÇáÑÕíÏ.'])->withInput();
+        }
     }
 
     private function validatedData(Request $request, ?int $customerId = null): array

@@ -10,6 +10,34 @@
         .navbar-brand { font-weight: 700; }
         .card { border: 0; box-shadow: 0 4px 20px rgba(25, 32, 56, 0.08); }
         .stat-number { font-size: 1.6rem; font-weight: 700; }
+        .page-header,
+        .filter-form,
+        .actions-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            align-items: center;
+        }
+        .page-header { justify-content: space-between; }
+        .filter-form .form-control { min-width: 90px; }
+        .table-responsive .table th,
+        .table-responsive .table td { white-space: nowrap; }
+        .topup-form { display: flex; gap: .25rem; flex-wrap: wrap; }
+        .topup-form .form-control-sm { min-width: 92px; }
+        @media (max-width: 767.98px) {
+            .container { padding-left: .75rem; padding-right: .75rem; }
+            .page-header h4 { width: 100%; margin-bottom: .25rem; }
+            .filter-form { width: 100%; }
+            .filter-form .form-control,
+            .filter-form .btn { width: 100%; }
+            .actions-row .btn,
+            .actions-row form { width: 100%; }
+            .actions-row form .btn { width: 100%; }
+            .table-responsive .table { font-size: .84rem; }
+            .navbar .btn { width: 100%; margin-top: .5rem; }
+            .topup-form .form-control-sm,
+            .topup-form .btn { width: 100%; }
+        }
     </style>
 </head>
 <body>

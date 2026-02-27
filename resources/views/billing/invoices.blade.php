@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="page-header mb-3">
     <h4 class="mb-0">أرشيف الفواتير</h4>
-    <form class="d-flex gap-2" method="GET">
-        <input type="number" name="month" min="1" max="12" class="form-control" value="{{ $month }}" style="width:90px">
-        <input type="number" name="year" min="2000" max="2100" class="form-control" value="{{ $year }}" style="width:110px">
+    <form class="filter-form" method="GET">
+        <input type="number" name="month" min="1" max="12" class="form-control" value="{{ $month }}" >
+        <input type="number" name="year" min="2000" max="2100" class="form-control" value="{{ $year }}" >
         <button class="btn btn-outline-primary">عرض</button>
     </form>
 </div>

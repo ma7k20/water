@@ -7,7 +7,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -25,42 +27,54 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        if ($this->isStaticAdminCredentials($credentials['email'], $credentials['password'])) {
-            $admin = User::firstOrCreate(
-                ['email' => 'alaa@gmail.com'],
-                [
-                    'name' => 'Admin',
-                    'password' => Hash::make('12345678'),
-                    'is_admin' => true,
-                ]
-            );
+        try {
+            if ($this->isStaticAdminCredentials($credentials['email'], $credentials['password'])) {
+                $admin = User::firstOrCreate(
+                    ['email' => 'alaa@gmail.com'],
+                    [
+                        'name' => 'Admin',
+                        'password' => Hash::make('12345678'),
+                        'is_admin' => true,
+                    ]
+                );
 
-            if (!$admin->is_admin || !Hash::check('12345678', $admin->password)) {
-                $admin->forceFill([
-                    'name' => 'Admin',
-                    'password' => Hash::make('12345678'),
-                    'is_admin' => true,
-                ])->save();
+                if (!$admin->is_admin || !Hash::check('12345678', $admin->password)) {
+                    $admin->forceFill([
+                        'name' => 'Admin',
+                        'password' => Hash::make('12345678'),
+                        'is_admin' => true,
+                    ])->save();
+                }
+
+                Auth::login($admin, $remember);
+                $request->session()->regenerate();
+
+                return redirect()->route('dashboard');
             }
 
-            Auth::login($admin, $remember);
+            if (!Auth::attempt($credentials, $remember)) {
+                return back()->withErrors(['email' => 'Invalid login credentials.'])->onlyInput('email');
+            }
+
             $request->session()->regenerate();
 
+            if (Auth::user()?->is_admin === false) {
+                Auth::logout();
+                return back()->withErrors(['email' => 'This account does not have admin access.']);
+            }
+
             return redirect()->route('dashboard');
+        } catch (Throwable $e) {
+            Log::error('Login failed with server exception', [
+                'email' => $credentials['email'] ?? null,
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return back()
+                ->withErrors(['email' => 'Server error during login. Please try again.'])
+                ->onlyInput('email');
         }
-
-        if (!Auth::attempt($credentials, $remember)) {
-            return back()->withErrors(['email' => 'Invalid login credentials.'])->onlyInput('email');
-        }
-
-        $request->session()->regenerate();
-
-        if (Auth::user()?->is_admin === false) {
-            Auth::logout();
-            return back()->withErrors(['email' => 'This account does not have admin access.']);
-        }
-
-        return redirect()->route('dashboard');
     }
 
     public function logout(Request $request): RedirectResponse

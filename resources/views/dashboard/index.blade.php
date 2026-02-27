@@ -1,11 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="page-header mb-3">
     <h4 class="mb-0">لوحة التحكم</h4>
-    <form class="d-flex gap-2" method="GET">
-        <input type="number" name="month" class="form-control" min="1" max="12" value="{{ $month }}" style="width:90px">
-        <input type="number" name="year" class="form-control" min="2000" max="2100" value="{{ $year }}" style="width:110px">
+    <form class="filter-form" method="GET">
+        <input type="number" name="month" class="form-control" min="1" max="12" value="{{ $month }}" >
+        <input type="number" name="year" class="form-control" min="2000" max="2100" value="{{ $year }}" >
         <button class="btn btn-outline-primary">تحديث</button>
     </form>
 </div>
@@ -19,7 +19,7 @@
     <div class="col-md-4"><div class="card p-3"><div>الحسابات السالبة</div><div class="stat-number text-danger">{{ $stats['negative_accounts_count'] }}</div></div></div>
 </div>
 
-<div class="mt-4 d-flex gap-2">
+<div class="mt-4 actions-row">
     <a class="btn btn-primary" href="{{ route('billing.index', ['month' => $month, 'year' => $year]) }}">إدخال القراءات</a>
     <a class="btn btn-outline-dark" href="{{ route('reports.monthly', ['month' => $month, 'year' => $year]) }}">عرض التقرير الشهري</a>
 </div>

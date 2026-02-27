@@ -7,9 +7,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-4">
+<div class="container min-vh-100 d-flex align-items-center py-4 py-md-5">
+    <div class="row justify-content-center w-100">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <h4 class="mb-3">دخول الإدارة</h4>

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="page-header mb-3">
     <h4 class="mb-0">إدارة المشتركين</h4>
     <a class="btn btn-primary" href="{{ route('customers.create') }}">إضافة مشترك</a>
 </div>
@@ -37,7 +37,7 @@
                     <td class="{{ $customer->previous_balance < 0 ? 'text-danger fw-bold' : '' }}">{{ number_format((float) $customer->previous_balance, 2) }}</td>
                     <td>{{ $customer->status === 'active' ? 'فعال' : 'موقوف' }}</td>
                     <td style="min-width:260px;">
-                        <form method="POST" action="{{ route('customers.topup', $customer) }}" class="d-flex gap-1">
+                        <form method="POST" action="{{ route('customers.topup', $customer) }}" class="topup-form">
                             @csrf
                             <input type="number" step="0.01" min="0.01" name="amount" class="form-control form-control-sm" placeholder="المبلغ" required>
                             <input type="text" name="note" class="form-control form-control-sm" placeholder="ملاحظة">
