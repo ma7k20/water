@@ -70,11 +70,18 @@ class WhatsAppService
 
         $sent = 0;
         $failed = 0;
+        $skipped = 0;
 
         foreach ($customers as $customer) {
-            $phone = $customer->phone ?? null;
+            $rawPhone = $customer->phone ?? null;
+            $phone = $this->normalizePhone($rawPhone);
             if (!$phone) {
-                $failed++;
+                Log::warning('Low balance WhatsApp skipped: invalid phone', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'raw_phone' => $rawPhone,
+                ]);
+                $skipped++;
                 continue;
             }
 
@@ -86,6 +93,14 @@ class WhatsAppService
             if ($response->successful()) {
                 $sent++;
             } else {
+                Log::warning('Low balance WhatsApp failed', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'raw_phone' => $rawPhone,
+                    'normalized_phone' => $phone,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
                 $failed++;
             }
         }
@@ -94,9 +109,10 @@ class WhatsAppService
             'provider' => $provider,
             'sent' => $sent,
             'failed' => $failed,
+            'skipped' => $skipped,
         ]);
 
-        return ['sent' => $sent, 'failed' => $failed];
+        return ['sent' => $sent, 'failed' => $failed, 'skipped' => $skipped];
     }
 
     private function sendViaWebJs(string $to, string $message)
@@ -195,6 +211,30 @@ class WhatsAppService
         }
 
         return implode("\n", $lines);
+    }
+
+    private function normalizePhone(?string $phone): ?string
+    {
+        $digits = preg_replace('/\\D+/', '', (string) $phone);
+        if ($digits === '') {
+            return null;
+        }
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        if (strlen($digits) === 10 && str_starts_with($digits, '0')) {
+            $digits = '970' . substr($digits, 1);
+        } elseif (strlen($digits) === 9 && str_starts_with($digits, '5')) {
+            $digits = '970' . $digits;
+        }
+
+        if (strlen($digits) < 9) {
+            return null;
+        }
+
+        return $digits;
     }
 
     private function formatLowBalanceMessage(Customer $customer): string
