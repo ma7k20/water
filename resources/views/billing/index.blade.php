@@ -36,6 +36,7 @@
                         <th>القراءة السابقة</th>
                         <th>الرصيد السابق</th>
                         <th>القراءة الحالية</th>
+                        <th>ضريبة</th>
                         <th>الاستهلاك المباشر</th>
                         <th>الرصيد الجديد المباشر</th>
                         <th>حالة هذا التاريخ</th>
@@ -56,6 +57,16 @@
                                        name="readings[{{ $customer->id }}]"
                                        data-unit="{{ $customer->unit_price }}"
                                        data-prev="{{ $customer->previous_reading }}"
+                                       data-balance="{{ $customer->previous_balance }}"
+                                       @disabled(in_array($customer->id, $existingInvoiceCustomerIds) || ($cycle && $cycle->status === 'closed'))>
+                            </td>
+                            <td>
+                                <input type="number"
+                                       step="0.01"
+                                       min="0"
+                                       class="form-control tax-input"
+                                       name="taxes[{{ $customer->id }}]"
+                                       value="0"
                                        data-balance="{{ $customer->previous_balance }}"
                                        @disabled(in_array($customer->id, $existingInvoiceCustomerIds) || ($cycle && $cycle->status === 'closed'))>
                             </td>
@@ -97,21 +108,30 @@
 
 @push('scripts')
 <script>
-document.querySelectorAll('.current-reading').forEach(function (input) {
+function updateRow(row) {
+    const readingInput = row.querySelector('.current-reading');
+    const taxInput = row.querySelector('.tax-input');
+    const current = parseFloat((readingInput && readingInput.value) || 0);
+    const prev = parseFloat((readingInput && readingInput.dataset.prev) || 0);
+    const unit = parseFloat((readingInput && readingInput.dataset.unit) || 0);
+    const prevBalance = parseFloat((readingInput && readingInput.dataset.balance) || 0);
+    const tax = parseFloat((taxInput && taxInput.value) || 0);
+    const consumption = Math.max(current - prev, 0);
+    const amount = consumption * unit;
+    const newBalance = prevBalance - amount - tax;
+
+    row.querySelector('.live-consumption').textContent = consumption.toFixed(2);
+    const balanceCell = row.querySelector('.live-balance');
+    balanceCell.textContent = newBalance.toFixed(2);
+    balanceCell.classList.toggle('text-danger', newBalance < 0);
+}
+
+document.querySelectorAll('.current-reading, .tax-input').forEach(function (input) {
     input.addEventListener('input', function () {
         const row = input.closest('tr');
-        const current = parseFloat(input.value || 0);
-        const prev = parseFloat(input.dataset.prev);
-        const unit = parseFloat(input.dataset.unit);
-        const prevBalance = parseFloat(input.dataset.balance);
-        const consumption = Math.max(current - prev, 0);
-        const amount = consumption * unit;
-        const newBalance = prevBalance - amount;
-
-        row.querySelector('.live-consumption').textContent = consumption.toFixed(2);
-        const balanceCell = row.querySelector('.live-balance');
-        balanceCell.textContent = newBalance.toFixed(2);
-        balanceCell.classList.toggle('text-danger', newBalance < 0);
+        if (row) {
+            updateRow(row);
+        }
     });
 });
 </script>

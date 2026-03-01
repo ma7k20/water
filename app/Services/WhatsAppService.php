@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\Invoice;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -55,6 +57,41 @@ class WhatsAppService
             'provider' => $provider,
             'month' => $month,
             'year' => $year,
+            'sent' => $sent,
+            'failed' => $failed,
+        ]);
+
+        return ['sent' => $sent, 'failed' => $failed];
+    }
+
+    public function sendLowBalanceNotices(Collection $customers): array
+    {
+        $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
+
+        $sent = 0;
+        $failed = 0;
+
+        foreach ($customers as $customer) {
+            $phone = $customer->phone ?? null;
+            if (!$phone) {
+                $failed++;
+                continue;
+            }
+
+            $message = $this->formatLowBalanceMessage($customer);
+            $response = $provider === 'webjs'
+                ? $this->sendViaWebJs($phone, $message)
+                : $this->sendViaCloudApi($phone, $message);
+
+            if ($response->successful()) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        Log::info('WhatsApp low balance send completed', [
+            'provider' => $provider,
             'sent' => $sent,
             'failed' => $failed,
         ]);
@@ -133,7 +170,7 @@ class WhatsAppService
         ];
 
         if ($newBalance < 50) {
-            $lines[] = 'يرجى ارسال 200 شيكل لحساب بنك فلسطين 0592116407 فادي حمد لاستمرار خدمة المياه';
+            $lines[] = 'يرجى إرسال 200 شيكل لحساب بنك فلسطين 0592116407 فادي حمد لاستمرار خدمة المياه';
         }
 
         return implode("\n", $lines);
@@ -154,9 +191,16 @@ class WhatsAppService
         ];
 
         if ($newBalance < 50) {
-            $lines[] = 'يرجى ارسال 200 شيكل لحساب بنك فلسطين 0592116407 فادي حمد لاستمرار خدمة الكهرباء';
+            $lines[] = 'يرجى إرسال 200 شيكل لحساب بنك فلسطين 0592116407 فادي حمد لاستمرار خدمة الكهرباء';
         }
 
         return implode("\n", $lines);
+    }
+
+    private function formatLowBalanceMessage(Customer $customer): string
+    {
+        $service = ($customer->service_type ?? 'water') === 'electric' ? 'الكهرباء' : 'المياه';
+
+        return "تنبيه: رصيدك أقل من 50 شيكل. يرجى تحويل المبلغ لتجنب فصل خدمة {$service}.";
     }
 }

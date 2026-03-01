@@ -27,7 +27,10 @@ class BillingController extends Controller
         $year = (int) ($request->input('year') ?: now()->year);
         $billingDate = $request->input('billing_date') ?: now()->toDateString();
 
-        $customers = Customer::where('status', 'active')->orderBy('name')->get();
+        $customers = Customer::where('status', 'active')
+            ->orderByRaw("NULLIF(regexp_replace(meter_number, '\\D', '', 'g'), '')::bigint")
+            ->orderBy('name')
+            ->get();
         $existingInvoiceCustomerIds = Invoice::whereDate('billing_date', $billingDate)->pluck('customer_id')->all();
         $cycle = BillingCycle::where('month', $month)->where('year', $year)->first();
 
@@ -41,11 +44,14 @@ class BillingController extends Controller
                 'billing_date' => 'required|date',
                 'readings' => 'required|array',
                 'readings.*' => 'nullable|numeric|min:0',
+                'taxes' => 'nullable|array',
+                'taxes.*' => 'nullable|numeric|min:0',
             ]);
 
             $summary = $this->billingService->issueInvoicesByDate(
                 $validated['readings'],
-                $validated['billing_date']
+                $validated['billing_date'],
+                $validated['taxes'] ?? []
             );
 
             return back()->with('success', "تم إصدار {$summary['issued']} فاتورة بتاريخ {$validated['billing_date']}، وتخطي {$summary['skipped']} مشترك بدون قراءة.");
@@ -89,6 +95,23 @@ class BillingController extends Controller
             Log::error('Send WhatsApp failed', ['message' => $e->getMessage()]);
 
             return back()->withErrors(['general' => 'فشل إرسال الفواتير عبر واتساب: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    public function sendLowBalanceWhatsApp(): RedirectResponse
+    {
+        try {
+            $customers = Customer::where('status', 'active')
+                ->where('previous_balance', '<', 50)
+                ->get();
+
+            $result = $this->whatsAppService->sendLowBalanceNotices($customers);
+
+            return back()->with('success', "تم إرسال {$result['sent']} رسالة، وفشل {$result['failed']}.");
+        } catch (Throwable $e) {
+            Log::error('Send low balance WhatsApp failed', ['message' => $e->getMessage()]);
+
+            return back()->withErrors(['general' => 'فشل إرسال التنبيهات: ' . $e->getMessage()])->withInput();
         }
     }
 

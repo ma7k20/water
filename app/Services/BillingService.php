@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class BillingService
 {
-    public function issueInvoicesByDate(array $readings, string $billingDate): array
+    public function issueInvoicesByDate(array $readings, string $billingDate, array $taxes = []): array
     {
         $date = Carbon::parse($billingDate);
         $month = (int) $date->month;
@@ -33,7 +33,7 @@ class BillingService
         $customers = Customer::where('status', 'active')->get()->keyBy('id');
         $periodKey = sprintf('%04d-%02d', $year, $month);
 
-        $summary = DB::transaction(function () use ($readings, $customers, $periodKey, $cycle, $date, $month, $year) {
+        $summary = DB::transaction(function () use ($readings, $taxes, $customers, $periodKey, $cycle, $date, $month, $year) {
             $issued = 0;
             $skipped = 0;
 
@@ -62,7 +62,8 @@ class BillingService
 
                 $consumption = $currentReading - (float) $customer->previous_reading;
                 $amount = $consumption * (float) $customer->unit_price;
-                $newBalance = (float) $customer->previous_balance - $amount;
+                $tax = isset($taxes[$customer->id]) ? (float) $taxes[$customer->id] : 0.0;
+                $newBalance = (float) $customer->previous_balance - $amount - $tax;
 
                 Invoice::create([
                     'customer_id' => $customer->id,
@@ -77,6 +78,7 @@ class BillingService
                     'consumption' => $consumption,
                     'unit_price' => $customer->unit_price,
                     'amount' => $amount,
+                    'tax' => $tax,
                     'previous_balance' => $customer->previous_balance,
                     'new_balance' => $newBalance,
                     'whatsapp_status' => 'pending',
@@ -134,10 +136,15 @@ class BillingService
     public function monthlyStats(int $month, int $year): array
     {
         $invoices = Invoice::where('month', $month)->where('year', $year);
+        $waterConsumption = (float) Invoice::where('month', $month)
+            ->where('year', $year)
+            ->where('service_type', 'water')
+            ->sum('consumption');
 
         return [
             'count' => $invoices->count(),
             'total_consumption' => (float) $invoices->sum('consumption'),
+            'water_consumption' => $waterConsumption,
             'total_amount' => (float) $invoices->sum('amount'),
             'negative_balances_total' => (float) $invoices->where('new_balance', '<', 0)->sum(DB::raw('ABS(new_balance)')),
             'negative_accounts_count' => (int) Invoice::where('month', $month)->where('year', $year)->where('new_balance', '<', 0)->count(),

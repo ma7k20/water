@@ -6,6 +6,13 @@
     <a class="btn btn-primary" href="{{ route('customers.create') }}">إضافة مشترك</a>
 </div>
 
+<div class="mb-3 actions-row">
+    <form method="POST" action="{{ route('billing.send_low_balance') }}">
+        @csrf
+        <button class="btn btn-warning" onclick="return confirm('تأكيد إرسال تنبيهات انخفاض الرصيد؟')">إرسال تنبيهات انخفاض الرصيد</button>
+    </form>
+</div>
+
 <div class="card p-3">
     <div class="table-responsive">
         <table class="table align-middle">
@@ -14,7 +21,6 @@
                     <th>الاسم</th>
                     <th>النوع</th>
                     <th>العداد</th>
-                    <th>الهاتف</th>
                     <th>سعر الوحدة</th>
                     <th>القراءة السابقة</th>
                     <th>تاريخ القراءة السابقة</th>
@@ -30,7 +36,6 @@
                     <td>{{ $customer->name }}</td>
                     <td>{{ $customer->service_type === 'electric' ? 'كهرباء' : 'مياه' }}</td>
                     <td>{{ $customer->meter_number }}</td>
-                    <td>{{ $customer->phone }}</td>
                     <td>{{ number_format((float) $customer->unit_price, 2) }}</td>
                     <td>{{ number_format((float) $customer->previous_reading, 2) }}</td>
                     <td>{{ optional($customer->previous_reading_date)->format('Y-m-d') ?: '-' }}</td>
