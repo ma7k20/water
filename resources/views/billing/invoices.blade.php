@@ -42,6 +42,9 @@
                             <span class="badge text-bg-success">تم</span>
                         @elseif($invoice->whatsapp_status === 'failed')
                             <span class="badge text-bg-danger">فشل</span>
+                            @if($invoice->whatsapp_error)
+                                <div class="text-danger small mt-1">{{ $invoice->whatsapp_error }}</div>
+                            @endif
                         @else
                             <span class="badge text-bg-secondary">معلق</span>
                         @endif
