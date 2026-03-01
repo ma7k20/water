@@ -17,7 +17,7 @@
     <div class="col-md-4"><div class="card p-3"><div>إجمالي المبالغ المخصومة</div><div class="stat-number">{{ number_format($stats['total_amount'], 2) }}</div></div></div>
     <div class="col-md-4"><div class="card p-3"><div>إجمالي الأرصدة السالبة</div><div class="stat-number text-danger">{{ number_format($stats['negative_balances_total'], 2) }}</div></div></div>
     <div class="col-md-4"><div class="card p-3"><div>الحسابات السالبة</div><div class="stat-number text-danger">{{ $stats['negative_accounts_count'] }}</div></div></div>
-    <div class="col-md-4"><div class="card p-3"><div>اسم النظام</div><div class="stat-number">{{ number_format($cupsCount, 2) }}</div><div class="text-muted small">عدد الأكواب × 2</div></div></div>
+    <div class="col-md-4"><div class="card p-3"><div>النظافة</div><div class="stat-number">{{ number_format($cupsCount, 2) }}</div><div class="text-muted small">عدد الأكواب × 2</div></div></div>
     <div class="col-md-4"><div class="card p-3"><div>المبلغ الصافي</div><div class="stat-number">{{ number_format($netAmount, 2) }}</div><div class="text-muted small">إجمالي المبالغ - النظافة ({{ number_format($cleaningFee, 2) }})</div></div></div>
 </div>
 

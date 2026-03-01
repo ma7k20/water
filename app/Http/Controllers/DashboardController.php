@@ -18,8 +18,8 @@ class DashboardController extends Controller
         $month = (int) ($request->input('month') ?: now()->month);
         $year = (int) ($request->input('year') ?: now()->year);
         $stats = $this->billingService->monthlyStats($month, $year);
-        $cleaningFee = (float) config('billing.cleaning_fee', 0);
         $cupsCount = ((float) ($stats['water_consumption'] ?? 0)) * 2;
+        $cleaningFee = $cupsCount;
         $netAmount = (float) $stats['total_amount'] - $cleaningFee;
 
         return view('dashboard.index', [
