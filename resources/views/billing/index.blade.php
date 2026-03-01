@@ -94,7 +94,7 @@
         @csrf
         <input type="hidden" name="month" value="{{ $month }}">
         <input type="hidden" name="year" value="{{ $year }}">
-        <button class="btn btn-success">إرسال جميع فواتير الشهر عبر واتساب</button>
+        <button class="btn btn-success">إرسال جميع فواتير الشهر عبر الرسائل النصية (SMS)</button>
     </form>
 
     <form method="POST" action="{{ route('billing.close_month') }}">

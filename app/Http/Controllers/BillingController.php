@@ -94,7 +94,7 @@ class BillingController extends Controller
         } catch (Throwable $e) {
             Log::error('Send WhatsApp failed', ['message' => $e->getMessage()]);
 
-            return back()->withErrors(['general' => 'فشل إرسال الفواتير عبر واتساب: ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['general' => 'فشل إرسال الفواتير عبر الرسائل النصية (SMS): ' . $e->getMessage()])->withInput();
         }
     }
 

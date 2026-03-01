@@ -50,7 +50,7 @@ class ReportController extends Controller
         $callback = static function () use ($rows) {
             $file = fopen('php://output', 'w');
             fwrite($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['الاسم', 'الشهر', 'تاريخ الدورة', 'الاستهلاك', 'المبلغ', 'الرصيد الجديد', 'حالة الواتساب']);
+            fputcsv($file, ['الاسم', 'الشهر', 'تاريخ الدورة', 'الاستهلاك', 'المبلغ', 'الرصيد الجديد', 'حالة الإرسال']);
             foreach ($rows as $row) {
                 fputcsv($file, [
                     $row->customer?->name,
