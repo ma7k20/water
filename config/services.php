@@ -39,6 +39,9 @@ return [
         'admin_phone' => env('WHATSAPP_ADMIN_PHONE'),
         'webjs_base_url' => env('WHATSAPP_WEBJS_BASE_URL', 'http://127.0.0.1:3001'),
         'webjs_api_key' => env('WHATSAPP_WEBJS_API_KEY'),
+        'sms_gateway_url' => env('SMS_GATEWAY_URL'),
+        'sms_gateway_api_key' => env('SMS_GATEWAY_API_KEY'),
+        'sms_gateway_timeout' => env('SMS_GATEWAY_TIMEOUT', 20),
     ],
 
 ];

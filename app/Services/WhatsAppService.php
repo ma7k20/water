@@ -14,7 +14,7 @@ class WhatsAppService
     public function sendMonthlyInvoicesToAdmin(int $month, int $year): array
     {
         $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
-        $adminPhone = config('services.whatsapp.admin_phone');
+        $adminPhone = $this->normalizePhone((string) config('services.whatsapp.admin_phone'));
 
         if (!$adminPhone) {
             throw new \RuntimeException('إعداد WHATSAPP_ADMIN_PHONE غير مكتمل في ملف البيئة.');
@@ -31,9 +31,7 @@ class WhatsAppService
 
         foreach ($invoices as $invoice) {
             $message = $this->formatInvoiceMessage($invoice);
-            $response = $provider === 'webjs'
-                ? $this->sendViaWebJs($adminPhone, $message)
-                : $this->sendViaCloudApi($adminPhone, $message);
+            $response = $this->sendMessageByProvider($provider, $adminPhone, $message);
 
             if ($response->successful()) {
                 $invoice->update([
@@ -86,9 +84,7 @@ class WhatsAppService
             }
 
             $message = $this->formatLowBalanceMessage($customer);
-            $response = $provider === 'webjs'
-                ? $this->sendViaWebJs($phone, $message)
-                : $this->sendViaCloudApi($phone, $message);
+            $response = $this->sendMessageByProvider($provider, $phone, $message);
 
             if ($response->successful()) {
                 $sent++;
@@ -113,6 +109,16 @@ class WhatsAppService
         ]);
 
         return ['sent' => $sent, 'failed' => $failed, 'skipped' => $skipped];
+    }
+
+    private function sendMessageByProvider(string $provider, string $to, string $message)
+    {
+        return match ($provider) {
+            'webjs' => $this->sendViaWebJs($to, $message),
+            'cloud' => $this->sendViaCloudApi($to, $message),
+            'sms_gateway' => $this->sendViaSmsGateway($to, $message),
+            default => throw new \RuntimeException("Unsupported WhatsApp provider: {$provider}"),
+        };
     }
 
     private function sendViaWebJs(string $to, string $message)
@@ -158,6 +164,34 @@ class WhatsAppService
             'type' => 'text',
             'text' => ['body' => $message],
         ]);
+    }
+
+    private function sendViaSmsGateway(string $to, string $message)
+    {
+        $url = (string) config('services.whatsapp.sms_gateway_url');
+        $apiKey = (string) config('services.whatsapp.sms_gateway_api_key');
+        $timeout = (int) config('services.whatsapp.sms_gateway_timeout', 20);
+
+        if ($url === '') {
+            throw new \RuntimeException('SMS_GATEWAY_URL is not configured.');
+        }
+        if (app()->environment('production') && preg_match('/localhost|127\.0\.0\.1/i', $url)) {
+            throw new \RuntimeException('Cannot use localhost SMS gateway in production.');
+        }
+
+        try {
+            $request = Http::timeout(max($timeout, 5))->acceptJson();
+            if ($apiKey !== '') {
+                $request = $request->withHeaders(['X-Api-Key' => $apiKey]);
+            }
+
+            return $request->post($url, [
+                'phone' => preg_replace('/\D+/', '', $to),
+                'message' => $message,
+            ]);
+        } catch (ConnectionException $e) {
+            throw new \RuntimeException("Failed to connect to SMS gateway {$url}: {$e->getMessage()}");
+        }
     }
 
     private function formatInvoiceMessage(Invoice $invoice): string
