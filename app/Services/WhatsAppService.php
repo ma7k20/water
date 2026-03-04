@@ -16,7 +16,7 @@ class WhatsAppService
         $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
         $adminPhone = $this->normalizePhone((string) config('services.whatsapp.admin_phone'));
 
-        if (!$adminPhone) {
+        if ($provider !== 'sms_gateway' && !$adminPhone) {
             throw new \RuntimeException('إعداد WHATSAPP_ADMIN_PHONE غير مكتمل في ملف البيئة.');
         }
 
@@ -31,7 +31,20 @@ class WhatsAppService
 
         foreach ($invoices as $invoice) {
             $message = $this->formatInvoiceMessage($invoice);
-            $response = $this->sendMessageByProvider($provider, $adminPhone, $message);
+            $recipient = $provider === 'sms_gateway'
+                ? $this->normalizePhone((string) ($invoice->customer->phone ?? ''))
+                : $adminPhone;
+
+            if (!$recipient) {
+                $invoice->update([
+                    'whatsapp_status' => 'failed',
+                    'whatsapp_error' => 'Missing or invalid customer phone number.',
+                ]);
+                $failed++;
+                continue;
+            }
+
+            $response = $this->sendMessageByProvider($provider, $recipient, $message);
 
             if ($response->successful()) {
                 $invoice->update([
