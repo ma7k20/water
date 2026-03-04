@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppService
 {
-    public function sendMonthlyInvoicesToAdmin(int $month, int $year): array
+    public function sendMonthlyInvoicesToAdmin(int $month, int $year, array $customerIds = []): array
     {
         $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
         $adminPhone = $this->normalizePhone((string) config('services.whatsapp.admin_phone'));
@@ -20,11 +20,15 @@ class WhatsAppService
             throw new \RuntimeException('إعداد WHATSAPP_ADMIN_PHONE غير مكتمل في ملف البيئة.');
         }
 
-        $invoices = Invoice::with('customer')
+        $invoicesQuery = Invoice::with('customer')
             ->where('month', $month)
-            ->where('year', $year)
-            ->where('whatsapp_status', '!=', 'sent')
-            ->get();
+            ->where('year', $year);
+
+        if (!empty($customerIds)) {
+            $invoicesQuery->whereIn('customer_id', $customerIds);
+        }
+
+        $invoices = $invoicesQuery->get();
 
         $sent = 0;
         $failed = 0;

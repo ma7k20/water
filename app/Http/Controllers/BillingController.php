@@ -83,11 +83,16 @@ class BillingController extends Controller
             $validated = $request->validate([
                 'month' => 'required|integer|min:1|max:12',
                 'year' => 'required|integer|min:2000|max:2100',
+                'customer_ids' => 'nullable|array',
+                'customer_ids.*' => 'integer|exists:customers,id',
             ]);
+
+            $customerIds = array_values(array_unique($validated['customer_ids'] ?? []));
 
             $result = $this->whatsAppService->sendMonthlyInvoicesToAdmin(
                 (int) $validated['month'],
-                (int) $validated['year']
+                (int) $validated['year'],
+                $customerIds
             );
 
             return back()->with('success', "تم إرسال {$result['sent']} فاتورة، وفشل {$result['failed']}.");
