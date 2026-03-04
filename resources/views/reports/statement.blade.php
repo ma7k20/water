@@ -1,7 +1,10 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <h4 class="mb-3">كشف حساب المشترك: {{ $customer->name }}</h4>
+<div class="alert alert-info py-2">
+    الرصيد الحالي: <strong>{{ number_format((float) $customer->previous_balance, 2) }}</strong>
+</div>
 <div class="card p-3">
     <div class="table-responsive">
         <table class="table table-bordered">

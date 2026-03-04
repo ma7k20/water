@@ -50,7 +50,8 @@ class ReportController extends Controller
         $callback = static function () use ($rows) {
             $file = fopen('php://output', 'w');
             fwrite($file, "\xEF\xBB\xBF");
-            fputcsv($file, ['الاسم', 'الشهر', 'تاريخ الدورة', 'الاستهلاك', 'المبلغ', 'الرصيد الجديد', 'حالة الإرسال']);
+            fputcsv($file, ['الاسم', 'الشهر', 'تاريخ الدورة', 'الاستهلاك', 'المبلغ', 'الرصيد الحالي', 'حالة الإرسال']);
+
             foreach ($rows as $row) {
                 fputcsv($file, [
                     $row->customer?->name,
@@ -58,10 +59,11 @@ class ReportController extends Controller
                     optional($row->billing_date)->format('Y-m-d'),
                     $row->consumption,
                     $row->amount,
-                    $row->new_balance,
+                    $row->customer?->previous_balance ?? 0,
                     $row->whatsapp_status,
                 ]);
             }
+
             fclose($file);
         };
 

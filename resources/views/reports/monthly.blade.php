@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="page-header mb-3">
@@ -14,7 +14,7 @@
     <div class="col-md-3"><div class="card p-3">عدد الفواتير: <strong>{{ $stats['count'] }}</strong></div></div>
     <div class="col-md-3"><div class="card p-3">إجمالي الاستهلاك: <strong>{{ number_format($stats['total_consumption'], 2) }}</strong></div></div>
     <div class="col-md-3"><div class="card p-3">إجمالي المبالغ: <strong>{{ number_format($stats['total_amount'], 2) }}</strong></div></div>
-    <div class="col-md-3"><div class="card p-3">الأرصدة السالبة: <strong class="text-danger">{{ number_format($stats['negative_balances_total'], 2) }}</strong></div></div>
+    <div class="col-md-3"><div class="card p-3">الأرصدة السالبة الحالية: <strong class="text-danger">{{ number_format($stats['negative_balances_total'], 2) }}</strong></div></div>
 </div>
 
 <div class="mb-3 actions-row">
@@ -30,7 +30,7 @@
                 <th>المشترك</th>
                 <th>الاستهلاك</th>
                 <th>المبلغ</th>
-                <th>الرصيد الجديد</th>
+                <th>الرصيد الحالي</th>
                 <th>كشف الحساب</th>
             </tr>
             </thead>
@@ -40,7 +40,7 @@
                     <td>{{ $invoice->customer?->name }}</td>
                     <td>{{ $invoice->consumption }}</td>
                     <td>{{ number_format((float) $invoice->amount, 2) }}</td>
-                    <td class="{{ $invoice->new_balance < 0 ? 'text-danger' : '' }}">{{ number_format((float) $invoice->new_balance, 2) }}</td>
+                    <td class="{{ (float) ($invoice->customer?->previous_balance ?? 0) < 0 ? 'text-danger' : '' }}">{{ number_format((float) ($invoice->customer?->previous_balance ?? 0), 2) }}</td>
                     <td><a class="btn btn-sm btn-outline-primary" href="{{ route('reports.statement', $invoice->customer_id) }}">عرض</a></td>
                 </tr>
             @endforeach

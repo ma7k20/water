@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="utf-8">
@@ -18,7 +18,7 @@
             <th>المشترك</th>
             <th>الاستهلاك</th>
             <th>المبلغ</th>
-            <th>الرصيد الجديد</th>
+            <th>الرصيد الحالي</th>
         </tr>
         </thead>
         <tbody>
@@ -27,7 +27,7 @@
                 <td>{{ $invoice->customer?->name }}</td>
                 <td>{{ $invoice->consumption }}</td>
                 <td>{{ number_format((float) $invoice->amount, 2) }}</td>
-                <td>{{ number_format((float) $invoice->new_balance, 2) }}</td>
+                <td>{{ number_format((float) ($invoice->customer?->previous_balance ?? 0), 2) }}</td>
             </tr>
         @endforeach
         </tbody>

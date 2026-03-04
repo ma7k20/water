@@ -140,14 +140,20 @@ class BillingService
             ->where('year', $year)
             ->where('service_type', 'water')
             ->sum('consumption');
+        $negativeBalancesTotal = (float) Customer::where('status', 'active')
+            ->where('previous_balance', '<', 0)
+            ->sum(DB::raw('ABS(previous_balance)'));
+        $negativeAccountsCount = (int) Customer::where('status', 'active')
+            ->where('previous_balance', '<', 0)
+            ->count();
 
         return [
             'count' => $invoices->count(),
             'total_consumption' => (float) $invoices->sum('consumption'),
             'water_consumption' => $waterConsumption,
             'total_amount' => (float) $invoices->sum('amount'),
-            'negative_balances_total' => (float) $invoices->where('new_balance', '<', 0)->sum(DB::raw('ABS(new_balance)')),
-            'negative_accounts_count' => (int) Invoice::where('month', $month)->where('year', $year)->where('new_balance', '<', 0)->count(),
+            'negative_balances_total' => $negativeBalancesTotal,
+            'negative_accounts_count' => $negativeAccountsCount,
         ];
     }
 

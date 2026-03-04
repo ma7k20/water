@@ -40,7 +40,7 @@
                 <th>الحالي</th>
                 <th>الاستهلاك</th>
                 <th>المبلغ</th>
-                <th>الرصيد الجديد</th>
+                <th>الرصيد الحالي</th>
                 <th>حالة الإرسال</th>
             </tr>
             </thead>
@@ -55,7 +55,9 @@
                     <td>{{ $invoice->current_reading }}</td>
                     <td>{{ $invoice->consumption }}</td>
                     <td>{{ number_format((float) $invoice->amount, 2) }}</td>
-                    <td class="{{ $invoice->new_balance < 0 ? 'text-danger fw-bold' : '' }}">{{ number_format((float) $invoice->new_balance, 2) }}</td>
+                    <td class="{{ (float) ($invoice->customer?->previous_balance ?? 0) < 0 ? 'text-danger fw-bold' : '' }}">
+                        {{ number_format((float) ($invoice->customer?->previous_balance ?? 0), 2) }}
+                    </td>
                     <td>
                         @if($invoice->whatsapp_status === 'sent')
                             <span class="badge text-bg-success">تم</span>
