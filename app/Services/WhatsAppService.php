@@ -30,7 +30,10 @@ class WhatsAppService
         $failed = 0;
 
         foreach ($invoices as $invoice) {
-            $message = $this->formatInvoiceMessage($invoice);
+            $currentBalance = $provider === 'sms_gateway'
+                ? (float) ($invoice->customer->previous_balance ?? $invoice->new_balance)
+                : null;
+            $message = $this->formatInvoiceMessage($invoice, $currentBalance);
             $recipient = $provider === 'sms_gateway'
                 ? $this->normalizePhone((string) ($invoice->customer->phone ?? ''))
                 : $adminPhone;
@@ -207,18 +210,18 @@ class WhatsAppService
         }
     }
 
-    private function formatInvoiceMessage(Invoice $invoice): string
+    private function formatInvoiceMessage(Invoice $invoice, ?float $currentBalance = null): string
     {
         return ($invoice->service_type ?? 'water') === 'electric'
-            ? $this->formatElectricityInvoiceMessage($invoice)
-            : $this->formatWaterInvoiceMessage($invoice);
+            ? $this->formatElectricityInvoiceMessage($invoice, $currentBalance)
+            : $this->formatWaterInvoiceMessage($invoice, $currentBalance);
     }
 
-    private function formatWaterInvoiceMessage(Invoice $invoice): string
+    private function formatWaterInvoiceMessage(Invoice $invoice, ?float $currentBalance = null): string
     {
         $previousReadingDate = optional($invoice->previous_reading_date)->format('Y-m-d') ?: 'غير متوفر';
         $currentReadingDate = optional($invoice->billing_date)->format('Y-m-d') ?: 'غير متوفر';
-        $newBalance = (float) $invoice->new_balance;
+        $newBalance = $currentBalance ?? (float) $invoice->new_balance;
 
         $lines = [
             '💧 فاتورة مياه',
@@ -239,9 +242,9 @@ class WhatsAppService
         return implode("\n", $lines);
     }
 
-    private function formatElectricityInvoiceMessage(Invoice $invoice): string
+    private function formatElectricityInvoiceMessage(Invoice $invoice, ?float $currentBalance = null): string
     {
-        $newBalance = (float) $invoice->new_balance;
+        $newBalance = $currentBalance ?? (float) $invoice->new_balance;
 
         $lines = [
             '⚡ فاتورة كهرباء',
