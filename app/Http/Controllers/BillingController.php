@@ -137,4 +137,24 @@ class BillingController extends Controller
             return back()->withErrors(['general' => 'حدث خطأ أثناء إغلاق الشهر.'])->withInput();
         }
     }
+
+    public function deleteInvoice(Invoice $invoice): RedirectResponse
+    {
+        if ($invoice->is_locked) {
+            return back()->withErrors(['general' => 'لا يمكن حذف فاتورة مغلقة.']);
+        }
+
+        $customer = $invoice->customer;
+        $customer->update([
+            'previous_reading' => $invoice->previous_reading,
+            'previous_reading_date' => $invoice->previous_reading_date,
+            'previous_balance' => $invoice->previous_balance,
+        ]);
+
+        $invoice->delete();
+
+        return back()->with('success', "تم حذف فاتورة {$customer->name} وإعادة القراءة السابقة. يمكن الآن إدخال قراءة جديدة.");
+    }
 }
+
+

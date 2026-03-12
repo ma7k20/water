@@ -24,7 +24,8 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::post('/billing/send-whatsapp', [BillingController::class, 'sendWhatsApp'])->name('billing.send_whatsapp');
     Route::post('/billing/send-low-balance', [BillingController::class, 'sendLowBalanceWhatsApp'])->name('billing.send_low_balance');
     Route::post('/billing/close-month', [BillingController::class, 'closeMonth'])->name('billing.close_month');
-    Route::get('/invoices', [BillingController::class, 'invoices'])->name('billing.invoices');
+Route::get('/invoices', [BillingController::class, 'invoices'])->name('billing.invoices');
+    Route::delete('/invoices/{invoice}', [BillingController::class, 'deleteInvoice'])->name('billing.invoice.delete');
 
     Route::get('/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
     Route::get('/reports/monthly/excel', [ReportController::class, 'monthlyExcel'])->name('reports.monthly.excel');

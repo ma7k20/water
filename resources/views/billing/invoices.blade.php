@@ -70,6 +70,17 @@
                             <span class="badge text-bg-secondary">معلق</span>
                         @endif
                     </td>
+                    <td>
+                        @if(!$invoice->is_locked)
+                        <form method="POST" action="{{ route('billing.invoice.delete', $invoice) }}" style="display:inline;" onsubmit="return confirm('حذف فاتورة {{ $invoice->customer->name }} وإعادة القراءة السابقة؟')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger">حذف وإعادة قراءة</button>
+                        </form>
+                        @else
+                        <span class="badge text-bg-secondary">مغلق</span>
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr><td colspan="10" class="text-center">لا توجد فواتير لهذه الفترة.</td></tr>
