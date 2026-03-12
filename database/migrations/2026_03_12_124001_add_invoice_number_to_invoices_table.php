@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('invoices', function (Blueprint $table) {
-            $table->string('invoice_number')->unique()->after('id');
+            $table->string('invoice_number')->nullable()->after('id');
         });
     }
 
