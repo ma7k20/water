@@ -50,15 +50,20 @@ class BillingService
                     ]);
                 }
 
+
                 $existing = Invoice::where('customer_id', $customer->id)
-                    ->whereDate('billing_date', $date->toDateString())
+                    ->where(function ($query) use ($month, $year) {
+                        $query->where('month', $month)->where('year', $year);
+                    })
+                    ->orWhereDate('billing_date', $date->toDateString())
                     ->exists();
 
                 if ($existing) {
                     throw ValidationException::withMessages([
-                        'duplicate' => "تم إصدار فاتورة للمشترك {$customer->name} بنفس تاريخ الدورة.",
+                        'duplicate' => "تم إصدار فاتورة للمشترك {$customer->name} في {$month}/{$year} أو بنفس تاريخ الدورة.",
                     ]);
                 }
+
 
                 $consumption = $currentReading - (float) $customer->previous_reading;
                 $amount = $consumption * (float) $customer->unit_price;
