@@ -59,7 +59,20 @@ class BillingService
                 $tax = isset($taxes[$customer->id]) ? (float) $taxes[$customer->id] : 0.0;
                 $newBalance = (float) $customer->previous_balance - $amount - $tax;
 
+                // 1️⃣ آخر فاتورة لنفس الشهر والسنة
+                $lastInvoice = Invoice::where('month', $month)
+                    ->where('year', $year)
+                    ->orderBy('invoice_number', 'desc')
+                    ->first();
+
+                // 2️⃣ حدد رقم التسلسل الجديد
+                $sequence = $lastInvoice ? ((int) explode('-', $lastInvoice->invoice_number)[2] + 1) : 1;
+
+                // 3️⃣ توليد رقم الفاتورة النهائي
+                $invoiceNumber = sprintf('INV-%d%02d-%03d', $year, $month, $sequence);
+                
                 Invoice::create([
+                    'invoice_number' => $invoiceNumber,
                     'customer_id' => $customer->id,
                     'service_type' => $customer->service_type ?? 'water',
                     'month' => $month,
