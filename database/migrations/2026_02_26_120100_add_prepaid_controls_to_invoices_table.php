@@ -15,7 +15,7 @@ return new class extends Migration
             $table->text('whatsapp_error')->nullable()->after('whatsapp_sent_at');
             $table->boolean('is_locked')->default(false)->after('whatsapp_error');
 
-            $table->unique(['customer_id', 'month', 'year'], 'invoices_customer_month_year_unique');
+            //$table->unique(['customer_id', 'month', 'year'], 'invoices_customer_month_year_unique');
             $table->index('period_key');
         });
     }
