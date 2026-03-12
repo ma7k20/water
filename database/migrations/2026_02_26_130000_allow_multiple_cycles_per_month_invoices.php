@@ -31,7 +31,7 @@ return new class extends Migration
             });
 
         Schema::table('invoices', function (Blueprint $table) {
-            //$table->dropUnique('invoices_customer_month_year_unique');
+            $table->dropUnique('invoices_customer_month_year_unique');
             $table->unique(['customer_id', 'billing_date'], 'invoices_customer_billing_date_unique');
         });
     }
