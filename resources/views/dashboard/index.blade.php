@@ -22,6 +22,9 @@
 </div>
 
 <div class="mt-4 actions-row">
+    <a class="btn btn-success" href="{{ route('notifications.index') }}">
+        <i class="fas fa-bullhorn me-1"></i>إرسال إشعارات
+    </a>
     <a class="btn btn-primary" href="{{ route('billing.index', ['month' => $month, 'year' => $year]) }}">إدخال القراءات</a>
     <a class="btn btn-outline-dark" href="{{ route('reports.monthly', ['month' => $month, 'year' => $year]) }}">عرض التقرير الشهري</a>
 </div>

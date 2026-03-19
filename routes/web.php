@@ -5,6 +5,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -31,4 +32,7 @@ Route::get('/invoices', [BillingController::class, 'invoices'])->name('billing.i
     Route::get('/reports/monthly/excel', [ReportController::class, 'monthlyExcel'])->name('reports.monthly.excel');
     Route::get('/reports/monthly/pdf', [ReportController::class, 'monthlyPdf'])->name('reports.monthly.pdf');
     Route::get('/reports/statement/{customer}', [ReportController::class, 'statement'])->name('reports.statement');
+    
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send');
 });

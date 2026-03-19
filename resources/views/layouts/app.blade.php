@@ -52,8 +52,9 @@
                 <li class="nav-item"><a class="nav-link" href="{{ route('dashboard') }}">لوحة التحكم</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('customers.index') }}">المشتركون</a></li>
                 <li class="nav-item"><a class="nav-link" href="{{ route('billing.index') }}">إدخال القراءات</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('billing.invoices') }}">الفواتير</a></li>
-                <li class="nav-item"><a class="nav-link" href="{{ route('reports.monthly') }}">التقارير</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ route('billing.invoices') }}">الفواتير</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ route('notifications.index') }}">الإشعارات</a></li>
+            <li class="nav-item"><a class="nav-link" href="{{ route('reports.monthly') }}">التقارير</a></li>
             </ul>
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
