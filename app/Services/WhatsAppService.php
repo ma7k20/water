@@ -297,4 +297,69 @@ class WhatsAppService
 
         return "تنبيه: رصيدك أقل من 50 شيكل. يرجى تحويل المبلغ لتجنب فصل خدمة {$service}.";
     }
+
+    /**
+     * إرسال إشعارات عامة لعملاء محددين
+     * مشابه لطريقة إرسال الفواتير مع تسجيل النتائج
+     */
+    public function sendGeneralNotifications(array $customerIds, string $message): array
+    {
+        $provider = strtolower((string) config('services.whatsapp.provider', 'webjs'));
+        
+        $customers = Customer::whereIn('id', $customerIds)->get();
+        
+        $sent = 0;
+        $failed = 0;
+        $skipped = 0;
+
+        foreach ($customers as $customer) {
+            $rawPhone = $customer->phone ?? null;
+            $phone = $this->normalizePhone($rawPhone);
+            
+            if (!$phone) {
+                Log::warning('General notification skipped: invalid phone', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'raw_phone' => $rawPhone,
+                ]);
+                $skipped++;
+                continue;
+            }
+
+            $response = $this->sendMessageByProvider($provider, $phone, $message);
+
+            if ($response->successful()) {
+                $sent++;
+                Log::info('General notification sent', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $phone,
+                ]);
+            } else {
+                $failed++;
+                Log::warning('General notification failed', [
+                    'customer_id' => $customer->id,
+                    'name' => $customer->name,
+                    'phone' => $phone,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+            }
+        }
+
+        Log::info('General notifications send completed', [
+            'provider' => $provider,
+            'customer_count' => $customers->count(),
+            'sent' => $sent,
+            'failed' => $failed,
+            'skipped' => $skipped,
+        ]);
+
+        return [
+            'sent' => $sent, 
+            'failed' => $failed, 
+            'skipped' => $skipped,
+            'total_customers' => count($customerIds)
+        ];
+    }
 }
