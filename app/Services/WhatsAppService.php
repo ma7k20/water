@@ -236,6 +236,7 @@ class WhatsAppService
             'القراءة الحالية: ' . number_format((float) $invoice->current_reading, 2),
             'كمية الاستهلاك: ' . number_format((float) $invoice->consumption, 2),
             'مبلغ الاستهلاك: ' . number_format((float) $invoice->amount, 2) . ' شيكل',
+            '🧹 تم خصم 5 شيكل لشراء أدوات تنظيف',
             'الرصيد المتبقي: ' . number_format($newBalance, 2) . ' شيكل',
         ];
 
