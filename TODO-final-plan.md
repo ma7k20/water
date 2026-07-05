@@ -1,12 +1,9 @@
-# خطة تنفيذ ميزة إرسال الإشعارات العامة في لوحة التحكم
+# TODO
 
-## الخطوات:
-- [x] 1. إنشاء NotificationController.php
-- [x] 2. تعديل routes/web.php
-- [x] 3. إنشاء resources/views/notifications/index.blade.php
-- [x] 4. تعديل resources/views/dashboard/index.blade.php
-- [x] 5. إضافة طريقة sendGeneralNotifications() في WhatsAppService.php (مشابهة لطريقة إرسال الفواتير)
-- [x] 6. اختبار النموذج والإرسال ✅
-- [x] 7. تحديث هذا الملف بالإنجازات ✅
+- [x] تحديد مصدر نص رسالة الإشعارات العامة.
+- [x] فحص منطق حساب الضريبة أثناء إصدار الفواتير.
+- [x] التأكد أن الضريبة تُخصم ضمن `new_balance` داخل `BillingService`.
+- [ ] تعديل `Dashboard` ليعرض إجمالي الضريبة وإجمالي المبالغ المخصومة وصافي المبلغ حسب الضرائب.
+- [ ] تعديل `BillingService@monthlyStats` لإضافة `total_tax` و `total_discounted` و `netAmount` إن لزم.
+- [ ] تحديث `resources/views/dashboard/index.blade.php` لعرض القيم الجديدة.
 
-**ملاحظة**: طريقة الإرسال ستكون مشابهة لإرسال الفواتير (استخدام نفس الـ provider مع رسالة مخصصة + تسجيل sent/failed).

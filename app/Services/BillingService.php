@@ -160,11 +160,19 @@ class BillingService
             ->where('previous_balance', '<', 0)
             ->count();
 
+        $totalTax = (float) $invoices->sum('tax');
+        $totalAmount = (float) $invoices->sum('amount');
+        $discountedTotal = $totalAmount + $totalTax; // المبالغ المخصومة = الاستهلاك + الضريبة
+        $netAmount = $discountedTotal - $waterConsumption; // الصافي = (الاستهلاك + الضريبة) - النظافة/عدد الأكواب
+
         return [
             'count' => $invoices->count(),
             'total_consumption' => (float) $invoices->sum('consumption'),
             'water_consumption' => $waterConsumption,
-            'total_amount' => (float) $invoices->sum('amount'),
+            'total_amount' => $totalAmount,
+            'total_tax' => $totalTax,
+            'discounted_total' => $discountedTotal,
+            'net_amount' => $netAmount,
             'negative_balances_total' => $negativeBalancesTotal,
             'negative_accounts_count' => $negativeAccountsCount,
         ];
